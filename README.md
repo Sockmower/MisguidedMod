@@ -17,7 +17,7 @@ A: look in your logs for errors i guess, you can ignore any about team packets t
 Q: sock what the fuck is this your code is an uncommented piece of shit  
 A: yes, next question
 
-Q: sock why are you using <thing> instead of <thing>  
+Q: sock why are you using [thing] instead of [thing]
 A: probably because i have no idea what i'm doing, this is my first mod, feel free to make a PR to fix it
 
 Q: sock can i fix your code pls  
