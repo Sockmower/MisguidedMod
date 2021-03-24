@@ -1,0 +1,16 @@
+[
+{
+  "modid": "misguidedmod",
+  "name": "Misguided Mod",
+  "description": "An extremely misguided mod.",
+  "version": "1? I guess?",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Sockmower"],
+  "credits": "Sockmower, for having this awful idea",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
