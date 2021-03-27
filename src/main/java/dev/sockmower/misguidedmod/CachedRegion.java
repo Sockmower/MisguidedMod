@@ -29,6 +29,12 @@ public class CachedRegion implements Closeable {
     private SeekableByteChannel seekableStream;
     private Int2ObjectMap<ChunkHeader> lookupTable = new Int2ObjectOpenHashMap<>();
     private Logger logger;
+    public long lastAccessed;
+    public boolean poison;
+
+    CachedRegion(boolean poison) {
+        this.poison = poison;
+    }
 
     CachedRegion(String directory, int x, int z, Logger logger) throws IOException {
         this.logger = logger;

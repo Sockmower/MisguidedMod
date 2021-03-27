@@ -19,11 +19,9 @@ public class CachedWorld {
     private Minecraft mc;
     private MisguidedMod mm;
 
-    private Map<String, CachedRegion> regionCache = new HashMap<>();
+    private Map<String, CachedRegion> regionCache = new ConcurrentHashMap<>();
     private final Set<Pos2> desiredChunks = ConcurrentHashMap.newKeySet();
     private final Set<CachedChunk> chunkWriteQueue = ConcurrentHashMap.newKeySet();
-    private Thread chunkLoaderThread;
-    private Thread chunkWriterThread;
 
     CachedWorld(Path directory, Logger logger, Minecraft mc, MisguidedMod mm) {
         this.logger = logger;
@@ -39,7 +37,7 @@ public class CachedWorld {
         this.directory = directory.toString();
         logger.info("Initialized cachedWorld with working dir as {}", directory);
 
-        chunkLoaderThread = new Thread(() -> {
+        Thread chunkLoaderThread = new Thread(() -> {
             while (true) {
                 if (!desiredChunks.isEmpty()) {
                     int waitTime = 1000 / desiredChunks.size();
@@ -69,7 +67,7 @@ public class CachedWorld {
         }, "MisguidedMod Chunk Loading Thread");
         chunkLoaderThread.start();
 
-        chunkWriterThread = new Thread(() -> {
+        Thread chunkWriterThread = new Thread(() -> {
             while (true) {
                 if (!chunkWriteQueue.isEmpty()) {
                     int waitTime = 1000 / chunkWriteQueue.size();
@@ -95,6 +93,25 @@ public class CachedWorld {
             }
         }, "MisguidedMod Chunk Writing Thread");
         chunkWriterThread.start();
+
+        Thread regionPruningThread = new Thread(() -> {
+            while (true) {
+                try {
+                    for (String key : regionCache.keySet()) {
+                        CachedRegion reg = regionCache.get(key);
+                        if (reg.poison) { logger.info("Exiting region prune thread"); return; }
+                        if (System.currentTimeMillis() - reg.lastAccessed > 60000) {
+                            reg.close();
+                            regionCache.remove(key);
+                        }
+                    }
+                    Thread.sleep(5000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }, "MisguidedMod Region Pruning Thread");
+        regionPruningThread.start();
     }
 
     public CachedRegion getCachedRegion(int x, int z) throws IOException {
@@ -106,6 +123,7 @@ public class CachedWorld {
         } else {
             reg = regionCache.get(key);
         }
+        reg.lastAccessed = System.currentTimeMillis();
         return reg;
     }
 
@@ -131,5 +149,8 @@ public class CachedWorld {
 
         Pos2 poisonedPos = new Pos2(true);
         desiredChunks.add(poisonedPos);
+
+        CachedRegion poisonedReg = new CachedRegion(true);
+        regionCache.put("_poison", poisonedReg);
     }
 }
