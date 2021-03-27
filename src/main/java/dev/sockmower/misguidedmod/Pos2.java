@@ -2,6 +2,7 @@ package dev.sockmower.misguidedmod;
 
 public class Pos2 {
     public final int x, z;
+    public boolean poisoned;
 
     public static Pos2 fromLong(long l) {
         return new Pos2((int) l, (int) (l >> 32));
@@ -10,6 +11,12 @@ public class Pos2 {
     public Pos2(int x, int z) {
         this.x = x;
         this.z = z;
+    }
+
+    public Pos2(boolean poisoned) {
+        this.x = -1;
+        this.z = -1;
+        this.poisoned = poisoned;
     }
 
     public long asLong() {

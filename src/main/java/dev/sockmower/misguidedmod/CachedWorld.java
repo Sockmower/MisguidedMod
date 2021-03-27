@@ -9,7 +9,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.play.server.SPacketChunkData;
 import org.apache.logging.log4j.Logger;
+import sun.misc.Cache;
 
 public class CachedWorld {
     private final String directory;
@@ -42,6 +44,7 @@ public class CachedWorld {
                 if (!desiredChunks.isEmpty()) {
                     int waitTime = 1000 / desiredChunks.size();
                     for (Pos2 pos : desiredChunks) {
+                        if (pos.poisoned) { logger.info("Exiting chunk load thread"); return; }
                         try {
                             CachedRegion reg = getCachedRegion(pos.x >> 4, pos.z >> 4);
                             CachedChunk x = reg.getChunk(pos);
@@ -71,6 +74,7 @@ public class CachedWorld {
                 if (!chunkWriteQueue.isEmpty()) {
                     int waitTime = 1000 / chunkWriteQueue.size();
                     for (CachedChunk chunk : chunkWriteQueue) {
+                        if (chunk.poison) { logger.info("Exiting chunk write thread"); return; }
                         try {
                             CachedRegion reg = getCachedRegion(chunk.pos.x >> 4, chunk.pos.z >> 4);
                             reg.writeChunk(chunk);
@@ -118,5 +122,14 @@ public class CachedWorld {
             reg.close();
         }
         regionCache.clear();
+    }
+
+    public void cancelThreads() {
+        CachedChunk poisonedChunk = new CachedChunk(new Pos2(-1, -1), new SPacketChunkData());
+        poisonedChunk.poison();
+        chunkWriteQueue.add(poisonedChunk);
+
+        Pos2 poisonedPos = new Pos2(true);
+        desiredChunks.add(poisonedPos);
     }
 }

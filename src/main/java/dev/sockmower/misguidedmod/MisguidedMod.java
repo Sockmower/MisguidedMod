@@ -212,6 +212,7 @@ public class MisguidedMod {
         logger.info("loadedChunks cleared.");
         try {
             cachedWorld.releaseFiles();
+            cachedWorld.cancelThreads();
         } catch (Exception e) { e.printStackTrace(); }
 
         removePacketHandler();
